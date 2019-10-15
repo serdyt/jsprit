@@ -24,7 +24,10 @@ import com.graphhopper.jsprit.core.problem.Skills;
 import com.graphhopper.jsprit.core.problem.solution.route.activity.TimeWindow;
 import com.graphhopper.jsprit.core.problem.solution.route.activity.TimeWindowsImpl;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 
 /**
@@ -44,8 +47,6 @@ import java.util.Collection;
  * @author schroeder
  */
 public class Shipment extends AbstractJob {
-
-
 
 
     /**
@@ -88,6 +89,10 @@ public class Shipment extends AbstractJob {
         public Object userData;
 
         public double maxTimeInVehicle = Double.MAX_VALUE;
+
+        private Activity pickup;
+
+        private Activity delivery;
 
         /**
          * Returns new instance of this builder.
@@ -252,6 +257,8 @@ public class Shipment extends AbstractJob {
             if (deliveryLocation_ == null) throw new IllegalArgumentException("The delivery location is missing.");
             capacity = capacityBuilder.build();
             skills = skillBuilder.build();
+            pickup = new Activity.Builder(pickupLocation_, Activity.Type.PICKUP).setServiceTime(pickupServiceTime).setTimeWindows(pickupTimeWindows.getTimeWindows()).build();
+            delivery = new Activity.Builder(deliveryLocation_, Activity.Type.DELIVERY).setServiceTime(deliveryServiceTime).setTimeWindows(deliveryTimeWindows.getTimeWindows()).build();
             return new Shipment(this);
         }
 
@@ -318,7 +325,7 @@ public class Shipment extends AbstractJob {
         /**
          * Set priority to shipment. Only 1 (high) to 10 (low) are allowed.
          * <p>
-         * Default is 2 = medium.
+         * Default is 2.
          *
          * @param priority
          * @return builder
@@ -368,6 +375,8 @@ public class Shipment extends AbstractJob {
 
     private final double maxTimeInVehicle;
 
+    private List<Activity> activities = new ArrayList<>();
+
     Shipment(Builder builder) {
         setUserData(builder.userData);
         this.id = builder.id;
@@ -382,6 +391,9 @@ public class Shipment extends AbstractJob {
         this.pickupTimeWindows = builder.pickupTimeWindows;
         this.priority = builder.priority;
         this.maxTimeInVehicle = builder.maxTimeInVehicle;
+        activities.add(builder.pickup);
+        activities.add(builder.delivery);
+        activities = Collections.unmodifiableList(activities);
     }
 
     @Override
@@ -505,9 +517,9 @@ public class Shipment extends AbstractJob {
     }
 
     /**
-     * Get priority of shipment. Only 1 = high priority, 2 = medium and 3 = low are allowed.
+     * Get priority of shipment. Only 1 (high) to 10 (low) are allowed.
      * <p>
-     * Default is 2 = medium.
+     * Default is 2.
      *
      * @return priority
      */
@@ -519,5 +531,10 @@ public class Shipment extends AbstractJob {
     @Override
     public double getMaxTimeInVehicle() {
         return maxTimeInVehicle;
+    }
+
+    @Override
+    public List<Activity> getActivities() {
+        return activities;
     }
 }

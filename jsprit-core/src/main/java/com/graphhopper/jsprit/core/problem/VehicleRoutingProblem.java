@@ -20,10 +20,7 @@ package com.graphhopper.jsprit.core.problem;
 import com.graphhopper.jsprit.core.problem.cost.VehicleRoutingActivityCosts;
 import com.graphhopper.jsprit.core.problem.cost.VehicleRoutingTransportCosts;
 import com.graphhopper.jsprit.core.problem.cost.WaitingTimeCosts;
-import com.graphhopper.jsprit.core.problem.job.Break;
-import com.graphhopper.jsprit.core.problem.job.Job;
-import com.graphhopper.jsprit.core.problem.job.Service;
-import com.graphhopper.jsprit.core.problem.job.Shipment;
+import com.graphhopper.jsprit.core.problem.job.*;
 import com.graphhopper.jsprit.core.problem.solution.route.VehicleRoute;
 import com.graphhopper.jsprit.core.problem.solution.route.activity.BreakActivity;
 import com.graphhopper.jsprit.core.problem.solution.route.activity.DefaultShipmentActivityFactory;
@@ -157,14 +154,7 @@ public class VehicleRoutingProblem {
          * @return locations
          */
         public Locations getLocations() {
-            return new Locations() {
-
-                @Override
-                public Coordinate getCoord(String id) {
-                    return tentative_coordinates.get(id);
-                }
-
-            };
+            return id -> tentative_coordinates.get(id);
         }
 
         /**
@@ -233,18 +223,8 @@ public class VehicleRoutingProblem {
         }
 
         private void addLocationToTentativeLocations(Job job) {
-            if (job instanceof Service) {
-                Location location = ((Service) job).getLocation();
-//                tentative_coordinates.put(location.getId(), location.getCoordinate());
-                addLocationToTentativeLocations(location);
-            } else if (job instanceof Shipment) {
-                Shipment shipment = (Shipment) job;
-                Location pickupLocation = shipment.getPickupLocation();
-                addLocationToTentativeLocations(pickupLocation);
-//                tentative_coordinates.put(pickupLocation.getId(), pickupLocation.getCoordinate());
-                Location deliveryLocation = shipment.getDeliveryLocation();
-                addLocationToTentativeLocations(deliveryLocation);
-//                tentative_coordinates.put(deliveryLocation.getId(), deliveryLocation.getCoordinate());
+            for (Activity act : job.getActivities()) {
+                addLocationToTentativeLocations(act.getLocation());
             }
         }
 
@@ -254,13 +234,7 @@ public class VehicleRoutingProblem {
         }
 
         private void addJobToFinalJobMapAndCreateActivities(Job job) {
-            if (job instanceof Service) {
-                Service service = (Service) job;
-                addService(service);
-            } else if (job instanceof Shipment) {
-                Shipment shipment = (Shipment) job;
-                addShipment(shipment);
-            }
+            addJobToFinalMap(job);
             List<AbstractActivity> jobActs = jobActivityFactory.createActivities(job);
             for (AbstractActivity act : jobActs) {
                 act.setIndex(activityIndexCounter);
@@ -340,13 +314,11 @@ public class VehicleRoutingProblem {
             return this;
         }
 
-        private void addShipment(Shipment job) {
+        private void addJobToFinalMap(Job job) {
             if (jobs.containsKey(job.getId())) {
                 logger.warn("The job " + job + " has already been added to the job list. This overrides the existing job.");
             }
             addLocationToTentativeLocations(job);
-//            tentative_coordinates.put(job.getPickupLocation().getId(), job.getPickupLocation().getCoordinate());
-//            tentative_coordinates.put(job.getDeliveryLocation().getId(), job.getDeliveryLocation().getCoordinate());
             jobs.put(job.getId(), job);
         }
 
@@ -418,6 +390,17 @@ public class VehicleRoutingProblem {
          */
         public Builder setActivityCosts(VehicleRoutingActivityCosts activityCosts) {
             this.activityCosts = activityCosts;
+            return this;
+        }
+
+        private final List<AbstractActivity> nonJobActivities = new ArrayList<>();
+
+        public Builder addNonJobActivities(Collection<? extends AbstractActivity> nonJobActivities) {
+            for (AbstractActivity act : nonJobActivities) {
+                act.setIndex(activityIndexCounter);
+                incActivityIndexCounter();
+                this.nonJobActivities.add(act);
+            }
             return this;
         }
 
@@ -512,16 +495,6 @@ public class VehicleRoutingProblem {
             return Collections.unmodifiableCollection(tentativeJobs.values());
         }
 
-        private Builder addService(Service service) {
-//            tentative_coordinates.put(service.getLocation().getId(), service.getLocation().getCoordinate());
-            addLocationToTentativeLocations(service);
-            if (jobs.containsKey(service.getId())) {
-                logger.warn("The service " + service + " has already been added to job list. This overrides existing job.");
-            }
-            jobs.put(service.getId(), service);
-            return this;
-        }
-
 
     }
 
@@ -579,14 +552,7 @@ public class VehicleRoutingProblem {
 
     private int nuActivities;
 
-    private final JobActivityFactory jobActivityFactory = new JobActivityFactory() {
-
-        @Override
-        public List<AbstractActivity> createActivities(Job job) {
-            return copyAndGetActivities(job);
-        }
-
-    };
+    private final JobActivityFactory jobActivityFactory = job -> copyAndGetActivities(job);
 
     private VehicleRoutingProblem(Builder builder) {
         this.jobs = builder.jobs;

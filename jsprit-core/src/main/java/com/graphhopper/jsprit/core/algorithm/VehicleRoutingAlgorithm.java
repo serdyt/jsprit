@@ -115,7 +115,7 @@ public class VehicleRoutingAlgorithm {
         super();
         this.problem = problem;
         this.searchStrategyManager = searchStrategyManager;
-        initialSolutions = new ArrayList<VehicleRoutingProblemSolution>();
+        initialSolutions = new ArrayList<>();
         objectiveFunction = null;
     }
 
@@ -131,27 +131,32 @@ public class VehicleRoutingAlgorithm {
         super();
         this.problem = problem;
         this.searchStrategyManager = searchStrategyManager;
-        initialSolutions = new ArrayList<VehicleRoutingProblemSolution>();
+        initialSolutions = new ArrayList<>();
         this.objectiveFunction = objectiveFunction;
     }
 
-    /**
-     * Adds solution to the collection of initial solutions.
-     *
-     * @param solution the solution to be added
-     */
-    public void addInitialSolution(VehicleRoutingProblemSolution solution) {
+  /**
+   * Adds solution to the collection of initial solutions.
+   *
+   * This method may lead to errors if tour activities in the solution are different to the
+   * ones in the VRP (including differences in indexing)
+   *
+   * @param solution the solution to be added
+   */
+  public void addInitialSolution(VehicleRoutingProblemSolution solution) {
         // We will make changes so let's make a copy
         solution = VehicleRoutingProblemSolution.copyOf(solution);
-        verify(solution);
+        verifyAndAdaptSolution(solution);
         initialSolutions.add(solution);
     }
 
-    private void verify(VehicleRoutingProblemSolution solution) {
-        Set<Job> allJobs = new HashSet<Job>(problem.getJobs().values());
-        allJobs.removeAll(solution.getUnassignedJobs());
+    //this method may lead to errors if tour activities in the solution are different to the ones in the VRP
+    //(including differences in indexing)
+    private void verifyAndAdaptSolution(VehicleRoutingProblemSolution solution) {
+        Set<Job> jobsNotInSolution = new HashSet<>(problem.getJobs().values());
+        jobsNotInSolution.removeAll(solution.getUnassignedJobs());
         for (VehicleRoute route : solution.getRoutes()) {
-            allJobs.removeAll(route.getTourActivities().getJobs());
+            jobsNotInSolution.removeAll(route.getTourActivities().getJobs());
             if (route.getVehicle().getIndex() == 0)
                 throw new IllegalStateException("vehicle used in initial solution has no index. probably a vehicle is used that has not been added to the " +
                     " the VehicleRoutingProblem. only use vehicles that have already been added to the problem.");
@@ -164,7 +169,9 @@ public class VehicleRoutingAlgorithm {
             }
         }
 
-        solution.getUnassignedJobs().addAll(allJobs);
+        //if solution is partial (not all jobs are considered), add these jobs to solution.unassignedJobs
+        solution.getUnassignedJobs().addAll(jobsNotInSolution);
+        //update the cost of solution (regardless if partial or not)
         solution.setCost(getObjectiveFunction().getCosts(solution));
 
         //        if (nuJobs != problem.getJobs().values().size()) {
@@ -218,7 +225,7 @@ public class VehicleRoutingAlgorithm {
         double now = System.currentTimeMillis();
         int noIterationsThisAlgoIsRunning = maxIterations;
         counter.reset();
-        Collection<VehicleRoutingProblemSolution> solutions = new ArrayList<VehicleRoutingProblemSolution>(initialSolutions);
+        Collection<VehicleRoutingProblemSolution> solutions = new ArrayList<>(initialSolutions);
         algorithmStarts(problem, solutions);
         bestEver = Solutions.bestOf(solutions);
         if (logger.isTraceEnabled()) {
