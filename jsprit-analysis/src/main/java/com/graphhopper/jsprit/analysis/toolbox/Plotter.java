@@ -27,6 +27,7 @@ import com.graphhopper.jsprit.core.problem.vehicle.Vehicle;
 import com.graphhopper.jsprit.core.util.Coordinate;
 import org.jfree.chart.*;
 import org.jfree.chart.axis.NumberAxis;
+import org.jfree.chart.axis.ValueAxis;
 import org.jfree.chart.labels.XYItemLabelGenerator;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYItemRenderer;
@@ -42,6 +43,7 @@ import org.jfree.util.ShapeUtilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.geom.Ellipse2D;
 import java.awt.image.BufferedImage;
@@ -300,14 +302,30 @@ public class Plotter {
             return null;
         }
         final XYPlot plot = createPlot(problem, shipments, solution);
-        JFreeChart chart = new JFreeChart(title, plot);
+        JFreeChart chart = new JFreeChart(plot);
 
         LegendTitle legend = createLegend(routes, shipments, plot);
         chart.removeLegend();
-        chart.addLegend(legend);
+        //chart.addLegend(legend);
+        chart.getXYPlot().setDomainGridlinesVisible(false);
+        chart.getXYPlot().setRangeGridlinesVisible(false);
+        ValueAxis domain = chart.getXYPlot().getDomainAxis();
+        domain.setVisible(false);
+        ValueAxis domain2 = chart.getXYPlot().getRangeAxis();
+        domain2.setVisible(false);
+        Color trans = new Color(0xFF, 0xFF, 0xFF, 0);
+        chart.getPlot().setBackgroundPaint( trans );
+
+
+        try {
+            BufferedImage icon = ImageIO.read(new File("/home/ai6644/Malmo/Tools/DRTsim/data/osm.png"));
+
+          chart.setBackgroundImage(icon);
+        }
+        catch (IOException e){};
 
         save(chart, pngFile);
-        return chart.createBufferedImage(1024, 1024);
+        return chart.createBufferedImage(3000, 2000);
 
     }
 
@@ -454,7 +472,7 @@ public class Plotter {
 
     private void save(JFreeChart chart, String pngFile) {
         try {
-            ChartUtilities.saveChartAsPNG(new File(pngFile), chart, 1000, 600);
+            ChartUtilities.saveChartAsPNG(new File(pngFile), chart, 3000, 2000);
         } catch (IOException e) {
             log.error("cannot plot");
             log.error(e.toString());

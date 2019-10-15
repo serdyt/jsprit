@@ -26,6 +26,8 @@ import com.graphhopper.jsprit.core.problem.solution.VehicleRoutingProblemSolutio
 import com.graphhopper.jsprit.core.problem.solution.route.VehicleRoute;
 import com.graphhopper.jsprit.core.problem.solution.route.activity.TourActivity;
 
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -40,7 +42,16 @@ import java.util.List;
 public class SolutionPrinter {
 
     // Wrapping System.out into a PrintWriter
-    private static final PrintWriter SYSTEM_OUT_AS_PRINT_WRITER = new PrintWriter(System.out);
+    private static PrintWriter SYSTEM_OUT_AS_PRINT_WRITER;
+
+    static {
+        try {
+//          TODO: output file is hardcoded
+            SYSTEM_OUT_AS_PRINT_WRITER = new PrintWriter((new FileWriter("output/log", true)));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     /**
      * Enum to indicate verbose-level.
