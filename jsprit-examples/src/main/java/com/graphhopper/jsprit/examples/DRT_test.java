@@ -6,6 +6,7 @@ import com.graphhopper.jsprit.core.algorithm.box.GreedySchrimpfFactory;
 import com.graphhopper.jsprit.core.algorithm.box.Jsprit;
 import com.graphhopper.jsprit.core.algorithm.state.StateManager;
 import com.graphhopper.jsprit.core.algorithm.termination.IterationWithoutImprovementTermination;
+import com.graphhopper.jsprit.core.algorithm.termination.VariationCoefficientTermination;
 import com.graphhopper.jsprit.core.problem.Location;
 import com.graphhopper.jsprit.core.problem.VehicleRoutingProblem;
 import com.graphhopper.jsprit.core.problem.VehicleRoutingProblem.FleetSize;
@@ -111,21 +112,27 @@ public class DRT_test {
         VehicleRoutingProblem vrp = vrpBuilder.build();
 
         Jsprit.Builder algorithmBuilder = Jsprit.Builder.newInstance(vrp);
-        algorithmBuilder.setProperty(Jsprit.Parameter.MAX_TRANSPORT_COSTS, Double.toString(1.0E20));
-//        **********
-//        algorithmBuilder.setProperty(Jsprit.Strategy.CLUSTER_REGRET, "0.5");
-//        algorithmBuilder.setProperty(Jsprit.Parameter.THREADS, "4");
-//        **********
+        algorithmBuilder.setProperty(Jsprit.Parameter.MAX_TRANSPORT_COSTS, Double.toString(1.0E18));
+        algorithmBuilder.setProperty(Jsprit.Parameter.THREADS.toString(), "4");
+        algorithmBuilder.setProperty(Jsprit.Parameter.ITERATIONS.toString(), "2000");
+        algorithmBuilder.setProperty(Jsprit.Parameter.VEHICLE_SWITCH.toString(), "true");
+        algorithmBuilder.setProperty(Jsprit.Parameter.BREAK_SCHEDULING.toString(), String.valueOf(false));
+//        algorithmBuilder.setProperty(Jsprit.Parameter.FAST_REGRET.toString(), "true");
+        Random rand = new Random();
+        rand.setSeed(42);
+        algorithmBuilder.setRandom(rand);
         VehicleRoutingAlgorithm algorithm = algorithmBuilder.buildAlgorithm();
-        algorithm.setPrematureAlgorithmTermination(new IterationWithoutImprovementTermination(20));
-        algorithm.setMaxIterations(500);
-
+        VariationCoefficientTermination prematureTermination = new VariationCoefficientTermination(20, 0.01);
+        algorithm.setPrematureAlgorithmTermination(prematureTermination);
+        algorithm.addListener(prematureTermination);
+//        algorithm.setPrematureAlgorithmTermination(new IterationWithoutImprovementTermination(20));
+//        algorithm.addTerminationCriterion(new IterationWithoutImprovementTermination(20));
         Collection<VehicleRoutingProblemSolution> solutions = algorithm.searchSolutions();
 
         SolutionPrinter sprint= new SolutionPrinter();
         sprint.setPrintWriter(simLog);
 
-        sprint.print(Solutions.bestOf(solutions));
+//        sprint.print(Solutions.bestOf(solutions));
 
         if (printSolution) {
             new Plotter(vrp, Solutions.bestOf(solutions))
