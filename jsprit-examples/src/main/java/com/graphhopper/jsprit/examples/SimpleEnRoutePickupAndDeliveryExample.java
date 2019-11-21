@@ -76,7 +76,6 @@ public class SimpleEnRoutePickupAndDeliveryExample {
         Shipment shipment3 = Shipment.Builder.newInstance("3").addSizeDimension(0, 1).setPickupLocation(loc(Coordinate.newInstance(15, 7))).setDeliveryLocation(loc(Coordinate.newInstance(14, 9))).build();
         Shipment shipment4 = Shipment.Builder.newInstance("4").addSizeDimension(0, 1).setPickupLocation(loc(Coordinate.newInstance(15, 13))).setDeliveryLocation(loc(Coordinate.newInstance(14, 11))).build();
 
-
         VehicleRoutingProblem.Builder vrpBuilder = VehicleRoutingProblem.Builder.newInstance();
         vrpBuilder.addVehicle(vehicle);
         vrpBuilder.addJob(shipment1).addJob(shipment2).addJob(shipment3).addJob(shipment4);
@@ -118,11 +117,13 @@ public class SimpleEnRoutePickupAndDeliveryExample {
 		/*
 		 * plot problem with solution
 		 */
-        Plotter solutionPlotter = new Plotter(problem, Arrays.asList(Solutions.bestOf(solutions).getRoutes().iterator().next()));
+        Plotter solutionPlotter = new Plotter(problem, Arrays.asList(bestSolution.getRoutes().iterator().next()));
         solutionPlotter.plotShipments(true);
         solutionPlotter.plot("output/simpleEnRoutePickupAndDeliveryExample_solution.png", "en-route pickup and delivery");
 
-        new GraphStreamViewer(problem).setRenderShipments(true).display();
+        //new GraphStreamViewer(problem).setRenderShipments(true).display();
+        new GraphStreamViewer(problem, bestSolution).labelWith(GraphStreamViewer.Label.ID).setRenderDelay(200).display();
+
 
     }
 

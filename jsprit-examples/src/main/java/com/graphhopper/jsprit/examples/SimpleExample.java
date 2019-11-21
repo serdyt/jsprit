@@ -33,6 +33,8 @@ import com.graphhopper.jsprit.core.problem.vehicle.VehicleTypeImpl;
 import com.graphhopper.jsprit.core.reporting.SolutionPrinter;
 import com.graphhopper.jsprit.core.util.Solutions;
 import com.graphhopper.jsprit.io.problem.VrpXMLWriter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.Collection;
@@ -40,8 +42,10 @@ import java.util.Collection;
 
 public class SimpleExample {
 
+    private final static Logger logger = LoggerFactory.getLogger(VehicleRoutingAlgorithm.class);
 
     public static void main(String[] args) {
+        double now = System.currentTimeMillis();
         /*
          * some preparation - create output folder
 		 */
@@ -88,6 +92,7 @@ public class SimpleExample {
          * get the algorithm out-of-the-box.
 		 */
         VehicleRoutingAlgorithm algorithm = Jsprit.createAlgorithm(problem);
+        algorithm.setMaxIterations(20);
 
 		/*
          * and search a solution
@@ -101,17 +106,18 @@ public class SimpleExample {
 
         new VrpXMLWriter(problem, solutions).write("output/problem-with-solution.xml");
 
-        SolutionPrinter.print(problem, bestSolution, SolutionPrinter.Print.VERBOSE);
+        //SolutionPrinter.print(problem, bestSolution, SolutionPrinter.Print.VERBOSE);
 
 		/*
          * plot
 		 */
-        new Plotter(problem,bestSolution).plot("output/plot.png","simple example");
+        //new Plotter(problem,bestSolution).plot("output/plot.png","simple example");
 
         /*
         render problem and solution with GraphStream
          */
-        new GraphStreamViewer(problem, bestSolution).labelWith(Label.ID).setRenderDelay(200).display();
+        //new GraphStreamViewer(problem, bestSolution).labelWith(Label.ID).setRenderDelay(200).display();
+        logger.info("Total time = {}",System.currentTimeMillis() - now);
     }
 
 }

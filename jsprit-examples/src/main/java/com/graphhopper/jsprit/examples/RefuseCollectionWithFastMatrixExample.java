@@ -17,6 +17,7 @@
  */
 package com.graphhopper.jsprit.examples;
 
+import com.graphhopper.jsprit.analysis.toolbox.GraphStreamViewer;
 import com.graphhopper.jsprit.core.algorithm.VehicleRoutingAlgorithm;
 import com.graphhopper.jsprit.core.algorithm.box.GreedySchrimpfFactory;
 import com.graphhopper.jsprit.core.algorithm.termination.IterationWithoutImprovementTermination;
@@ -96,6 +97,8 @@ public class RefuseCollectionWithFastMatrixExample {
 
         new VrpXMLWriter(vrp, solutions).write("output/refuseCollectionExampleSolution.xml");
 
+        new GraphStreamViewer(vrp, Solutions.bestOf(solutions)).labelWith(GraphStreamViewer.Label.ID).setRenderDelay(200).display();
+
     }
 
 
@@ -126,7 +129,7 @@ public class RefuseCollectionWithFastMatrixExample {
 
 
     private static void readDistances(FastVehicleRoutingTransportCostsMatrix.Builder matrixBuilder) throws IOException {
-        BufferedReader reader = new BufferedReader(new FileReader(new File("input/RefuseCollectionExample_Distances")));
+        BufferedReader reader = new BufferedReader(new FileReader(new File("input/refuseCollectionExample_Distances")));
         String line;
         boolean firstLine = true;
         while ((line = reader.readLine()) != null) {

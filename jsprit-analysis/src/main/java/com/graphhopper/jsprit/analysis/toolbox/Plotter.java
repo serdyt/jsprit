@@ -318,7 +318,7 @@ public class Plotter {
 
 
         try {
-            BufferedImage icon = ImageIO.read(new File("/home/ai6644/Malmo/Tools/DRTsim/data/osm.png"));
+            BufferedImage icon = ImageIO.read(new File("data/osm.png"));
 
           chart.setBackgroundImage(icon);
         }

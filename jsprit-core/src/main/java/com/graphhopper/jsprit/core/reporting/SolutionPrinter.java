@@ -79,6 +79,13 @@ public class SolutionPrinter {
         }
     }
 
+    public void setPrintWriter(String file){
+        try {
+            SYSTEM_OUT_AS_PRINT_WRITER = new PrintWriter((new FileWriter(file, true)));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     /**
      * Prints costs and #vehicles to stdout (out.println).

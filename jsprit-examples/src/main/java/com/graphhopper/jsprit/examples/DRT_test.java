@@ -29,6 +29,7 @@ import com.graphhopper.jsprit.io.problem.VrpXMLWriter;
 import com.graphhopper.jsprit.util.Examples;
 import com.graphhopper.jsprit.analysis.toolbox.Plotter;
 import com.graphhopper.jsprit.io.algorithm.VehicleRoutingAlgorithms;
+import org.apache.commons.lang.ObjectUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.text.SimpleDateFormat;
@@ -47,13 +48,50 @@ public class DRT_test {
     private final static Logger logger = LoggerFactory.getLogger(VehicleRoutingAlgorithm.class);
 
     public static void main(String[] args) throws IOException {
+        boolean printSolution = false;
+        String vrpFile = null;
+        String tdmFile = null;
+        String outFile = null;
+        String simLog = null;
+
+        for (int i = 0; i < args.length; i += 2) {
+            if (args[i].equals("-printSolution")) {
+                printSolution = Boolean.parseBoolean(args[i+1]);
+            }
+            else if (args[i].equals("-vrpFile")){
+                vrpFile = args[i+1];
+            }
+            else if (args[i].equals("-tdmFile")){
+                tdmFile = args[i+1];
+            }
+            else if (args[i].equals("-outFile")){
+                outFile = args[i+1];
+            }
+            else if (args[i].equals("-simLog")){
+                simLog = args[i+1];
+            }
+        }
+
+        if (vrpFile == null) {
+            vrpFile = "data/vrp.xml";
+        }
+        if (tdmFile == null){
+            tdmFile = "data/time_distance_matrix.csv";
+        }
+        if (outFile == null){
+            outFile = "data/problem-with-solution.xml";
+        }
+        if (simLog == null){
+            simLog = "output/log";
+        }
+
         Examples.createOutputFolder();
 
         VehicleRoutingProblem.Builder vrpBuilder = VehicleRoutingProblem.Builder.newInstance();
         vrpBuilder.setFleetSize(FleetSize.FINITE);
 
-//      The input problem. Yes, it is hardcoded.
-        new VrpXMLReader(vrpBuilder).read("/home/ai6644/Malmo/Tools/DRTsim/data/vrp.xml");
+//      The input VRP is either in data/vrp or provided in command line
+        new VrpXMLReader(vrpBuilder).read(vrpFile);
 
 //      Calculate the size of time-distance matrix from an input vrp file.
         Set<Integer> ints = vrpBuilder.getLocationMap().keySet().stream()
@@ -62,40 +100,47 @@ public class DRT_test {
         int tdm_size = java.util.Collections.max(ints)+1;
 
 //      Read time-distance matrix from an input csv.
-//        Input csv file location is hardcoded.
+//        Input csv file location is either in arguments or in data/time-distance-matrix.csv
         FastVehicleRoutingTransportCostsMatrix.Builder matrixBuilder = FastVehicleRoutingTransportCostsMatrix.Builder
             .newInstance(tdm_size, false);
         initMatrix(matrixBuilder, tdm_size);
-        readDistances(matrixBuilder);
+        readDistances(matrixBuilder, tdmFile);
 
         vrpBuilder.setRoutingCost(matrixBuilder.build());
 
         VehicleRoutingProblem vrp = vrpBuilder.build();
 
         Jsprit.Builder algorithmBuilder = Jsprit.Builder.newInstance(vrp);
-        algorithmBuilder.setProperty(Jsprit.Parameter.MAX_TRANSPORT_COSTS, Double.toString(1.0E8));
+        algorithmBuilder.setProperty(Jsprit.Parameter.MAX_TRANSPORT_COSTS, Double.toString(1.0E20));
+//        **********
+//        algorithmBuilder.setProperty(Jsprit.Strategy.CLUSTER_REGRET, "0.5");
+//        algorithmBuilder.setProperty(Jsprit.Parameter.THREADS, "4");
+//        **********
         VehicleRoutingAlgorithm algorithm = algorithmBuilder.buildAlgorithm();
-        algorithm.setPrematureAlgorithmTermination(new IterationWithoutImprovementTermination(5));
-        algorithm.setMaxIterations(20);
+        algorithm.setPrematureAlgorithmTermination(new IterationWithoutImprovementTermination(20));
+        algorithm.setMaxIterations(500);
 
         Collection<VehicleRoutingProblemSolution> solutions = algorithm.searchSolutions();
 
-        SolutionPrinter.print(Solutions.bestOf(solutions));
+        SolutionPrinter sprint= new SolutionPrinter();
+        sprint.setPrintWriter(simLog);
 
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yymmdd-hhmmss");
-        simpleDateFormat.format( new Date() );
-        new Plotter(vrp, Solutions.bestOf(solutions))
-            .plotShipments(true)
-            .setBoundingBox(13.535156, 55.553495, 13.930664, 55.702355)
-            .setScalingFactor(1)
-            .setLabel(Plotter.Label.ID)
-            .plot("/home/ai6644/Malmo/Tools/DRTsim/pictures/" + simpleDateFormat.format( new Date() ) + ".png", "DRT");
+        sprint.print(Solutions.bestOf(solutions));
+
+        if (printSolution) {
+            new Plotter(vrp, Solutions.bestOf(solutions))
+                .plotShipments(true)
+                .setBoundingBox(13.43769922,55.46296251,14.36869863,55.78847956)
+                .setScalingFactor(1)
+                .setLabel(Plotter.Label.ID)
+                .plot("pictures/" + System.currentTimeMillis() + ".png", "DRT");
+        }
 
         List<VehicleRoutingProblemSolution> l = new ArrayList<>();
         l.add(Solutions.bestOf(solutions));
-        new VrpXMLWriter(vrp, l).write("/home/ai6644/Malmo/Tools/DRTsim/data/problem-with-solution.xml");
+        new VrpXMLWriter(vrp, l).write(outFile);
 
-        SolutionPrinter.print(vrp, Solutions.bestOf(solutions), SolutionPrinter.Print.VERBOSE);
+        sprint.print(vrp, Solutions.bestOf(solutions), SolutionPrinter.Print.VERBOSE);
 
 //        new GraphStreamViewer(vrp, Solutions.bestOf(solutions))
 //            .labelWith(GraphStreamViewer.Label.ID).setRenderShipments(true).setRenderDelay(200)
@@ -106,8 +151,8 @@ public class DRT_test {
     /**
      * Read time distance matrix from csv.
      */
-    private static void readDistances(FastVehicleRoutingTransportCostsMatrix.Builder matrixBuilder) throws IOException {
-        BufferedReader reader = new BufferedReader(new FileReader(new File("/home/ai6644/Malmo/Tools/DRTsim/data/time_distance_matrix.csv")));
+    private static void readDistances(FastVehicleRoutingTransportCostsMatrix.Builder matrixBuilder, String tdmFile) throws IOException {
+        BufferedReader reader = new BufferedReader(new FileReader(new File(tdmFile)));
         String line;
         while ((line = reader.readLine()) != null) {
             String[] lineTokens = line.split(",");
