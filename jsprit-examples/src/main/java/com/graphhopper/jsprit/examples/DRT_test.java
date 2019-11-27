@@ -50,6 +50,7 @@ public class DRT_test {
 
     public static void main(String[] args) throws IOException {
         boolean printSolution = false;
+        String picFolder = null;
         String vrpFile = null;
         String tdmFile = null;
         String outFile = null;
@@ -71,6 +72,9 @@ public class DRT_test {
             else if (args[i].equals("-simLog")){
                 simLog = args[i+1];
             }
+            else if (args[i].equals("-picFolder")){
+                picFolder = args[i+1];
+            }
         }
 
         if (vrpFile == null) {
@@ -84,6 +88,9 @@ public class DRT_test {
         }
         if (simLog == null){
             simLog = "output/log";
+        }
+        if (picFolder == null){
+            picFolder = "pictures/";
         }
 
         Examples.createOutputFolder();
@@ -140,7 +147,7 @@ public class DRT_test {
                 .setBoundingBox(13.43769922,55.46296251,14.36869863,55.78847956)
                 .setScalingFactor(1)
                 .setLabel(Plotter.Label.ID)
-                .plot("pictures/" + System.currentTimeMillis() + ".png", "DRT");
+                .plot(picFolder + System.currentTimeMillis() + ".png", "DRT");
         }
 
         List<VehicleRoutingProblemSolution> l = new ArrayList<>();
