@@ -4,13 +4,16 @@ import com.graphhopper.jsprit.analysis.toolbox.GraphStreamViewer;
 import com.graphhopper.jsprit.core.algorithm.VehicleRoutingAlgorithm;
 import com.graphhopper.jsprit.core.algorithm.box.GreedySchrimpfFactory;
 import com.graphhopper.jsprit.core.algorithm.box.Jsprit;
+import com.graphhopper.jsprit.core.algorithm.state.StateId;
 import com.graphhopper.jsprit.core.algorithm.state.StateManager;
+import com.graphhopper.jsprit.core.algorithm.state.UpdateMaxTimeInVehicle;
 import com.graphhopper.jsprit.core.algorithm.termination.IterationWithoutImprovementTermination;
 import com.graphhopper.jsprit.core.algorithm.termination.VariationCoefficientTermination;
 import com.graphhopper.jsprit.core.problem.Location;
 import com.graphhopper.jsprit.core.problem.VehicleRoutingProblem;
 import com.graphhopper.jsprit.core.problem.VehicleRoutingProblem.FleetSize;
 import com.graphhopper.jsprit.core.problem.constraint.ConstraintManager;
+import com.graphhopper.jsprit.core.problem.constraint.MaxTimeInVehicleConstraint;
 import com.graphhopper.jsprit.core.problem.job.Break;
 import com.graphhopper.jsprit.core.problem.job.Job;
 import com.graphhopper.jsprit.core.problem.job.Service;
@@ -118,12 +121,21 @@ public class DRT_test {
 
         VehicleRoutingProblem vrp = vrpBuilder.build();
 
+        StateManager stateManager = new StateManager(vrp);
+        StateId id = stateManager.createStateId("max-time");
+        StateId openJobsId = stateManager.createStateId("open-jobs-id");
+        stateManager.addStateUpdater(new UpdateMaxTimeInVehicle(stateManager, id, vrp.getTransportCosts(), vrp.getActivityCosts(), openJobsId));
+
+        ConstraintManager constraintManager = new ConstraintManager(vrp,stateManager);
+        constraintManager.addConstraint(new MaxTimeInVehicleConstraint(vrp.getTransportCosts(), vrp.getActivityCosts(), id, stateManager, vrp, openJobsId), ConstraintManager.Priority.CRITICAL);
+
         Jsprit.Builder algorithmBuilder = Jsprit.Builder.newInstance(vrp);
         algorithmBuilder.setProperty(Jsprit.Parameter.MAX_TRANSPORT_COSTS, Double.toString(1.0E18));
         algorithmBuilder.setProperty(Jsprit.Parameter.THREADS.toString(), "4");
         algorithmBuilder.setProperty(Jsprit.Parameter.ITERATIONS.toString(), "2000");
         algorithmBuilder.setProperty(Jsprit.Parameter.VEHICLE_SWITCH.toString(), "true");
         algorithmBuilder.setProperty(Jsprit.Parameter.BREAK_SCHEDULING.toString(), String.valueOf(false));
+        algorithmBuilder.setStateAndConstraintManager(stateManager,constraintManager);
 //        algorithmBuilder.setProperty(Jsprit.Parameter.FAST_REGRET.toString(), "true");
         Random rand = new Random();
         rand.setSeed(42);
@@ -134,6 +146,7 @@ public class DRT_test {
         algorithm.addListener(prematureTermination);
 //        algorithm.setPrematureAlgorithmTermination(new IterationWithoutImprovementTermination(20));
 //        algorithm.addTerminationCriterion(new IterationWithoutImprovementTermination(20));
+
         Collection<VehicleRoutingProblemSolution> solutions = algorithm.searchSolutions();
 
         SolutionPrinter sprint= new SolutionPrinter();

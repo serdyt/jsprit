@@ -162,6 +162,7 @@
                                             </xs:complexType>
                                         </xs:element>
                                         <xs:element name="requiredSkills" type="xs:string" minOccurs="0" maxOccurs="1"/>
+                                        <xs:element name="maxInVehicleTime" type="xs:decimal" minOccurs="1" maxOccurs="1"/>
                                     </xs:all>
                                     <xs:attribute name="id" type="xs:string" use="required"/>
                                     <xs:attribute name="type" type="xs:string"/>
@@ -241,6 +242,7 @@
                                         </xs:element>
                                         <xs:element name="requiredSkills" type="xs:string" minOccurs="0" maxOccurs="1"/>
                                         <xs:element name="name" type="xs:string" minOccurs="0" maxOccurs="1"/>
+                                        <xs:element name="maxInVehicleTime" type="xs:decimal" minOccurs="1" maxOccurs="1"/>
                                     </xs:all>
                                     <xs:attribute name="id" type="xs:string" use="required"/>
                                 </xs:complexType>

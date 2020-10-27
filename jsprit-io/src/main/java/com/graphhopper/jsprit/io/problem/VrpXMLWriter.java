@@ -273,6 +273,7 @@ public class VrpXMLWriter {
             Collection<TimeWindow> tws = service.getTimeWindows();
             int index = 0;
             xmlConfig.setProperty(shipmentPathString + "(" + counter + ").duration", service.getServiceDuration());
+            xmlConfig.setProperty(shipmentPathString + "(" + counter + ").maxInVehicleTime", service.getMaxTimeInVehicle());
             for(TimeWindow tw : tws) {
 	            xmlConfig.setProperty(shipmentPathString + "(" + counter + ").timeWindows.timeWindow(" + index + ").start", tw.getStart());
 	            xmlConfig.setProperty(shipmentPathString + "(" + counter + ").timeWindows.timeWindow(" + index + ").end", tw.getEnd());
@@ -347,6 +348,8 @@ public class VrpXMLWriter {
             //skills
             String skillString = getSkillString(shipment);
             xmlConfig.setProperty(shipmentPathString + "(" + counter + ").requiredSkills", skillString);
+
+            xmlConfig.setProperty(shipmentPathString + "(" + counter + ").maxInVehicleTime", shipment.getMaxTimeInVehicle());
 
             //name
             if (shipment.getName() != null) {

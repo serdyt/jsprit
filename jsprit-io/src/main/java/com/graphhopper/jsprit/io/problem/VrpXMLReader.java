@@ -455,6 +455,10 @@ public class VrpXMLReader {
                 for (String skill : skillTokens) builder.addRequiredSkill(skill.toLowerCase());
             }
 
+            //read maxInVehicleTime
+            String maxInVehicleTime = shipmentConfig.getString("maxInVehicleTime");
+            builder.setMaxTimeInVehicle(Double.parseDouble(maxInVehicleTime));
+
             //build shipment
             Shipment shipment = builder.build();
 //			vrpBuilder.addJob(shipment);
@@ -541,6 +545,10 @@ public class VrpXMLReader {
                 String[] skillTokens = cleaned.split("[,;]");
                 for (String skill : skillTokens) builder.addRequiredSkill(skill.toLowerCase());
             }
+
+            //read maxInVehicleTime
+            String maxInVehicleTime = serviceConfig.getString("maxInVehicleTime");
+            builder.setMaxTimeInVehicle(Double.parseDouble(maxInVehicleTime));
 
             //build service
             Service service = builder.build();
