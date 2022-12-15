@@ -242,6 +242,7 @@ public class VehicleRoutingAlgorithm {
                 log(discoveredSolution);
             }
             memorizeIfBestEver(discoveredSolution);
+            logger.info("best solution cost {}", bestEver);
             selectedStrategy(discoveredSolution, problem, solutions);
             if (terminationManager.isPrematureBreak(discoveredSolution)) {
                 logger.info("premature algorithm termination at iteration {}", (i + 1));
@@ -298,6 +299,7 @@ public class VehicleRoutingAlgorithm {
 
 
     private void memorizeIfBestEver(DiscoveredSolution discoveredSolution) {
+
         if (discoveredSolution == null) return;
         if (bestEver == null) {
             bestEver = discoveredSolution.getSolution();

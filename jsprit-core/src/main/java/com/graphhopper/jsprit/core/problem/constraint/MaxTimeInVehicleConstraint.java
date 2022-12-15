@@ -135,12 +135,17 @@ public class MaxTimeInVehicleConstraint implements HardActivityConstraint {
                         nextAfterPickup = iFacts.getRoute().getActivities().get(iFacts.getRelatedActivityContext().getInsertionIndex());
                     if (nextAfterPickup != null)
                         openJobsAtNextOfPickup = stateManager.getActivityState(nextAfterPickup, iFacts.getNewVehicle(), openJobsId, Map.class);
-                    if (openJobsAtNextOfPickup.containsKey(openJob)) {
-                        TourActivity pickupAct = iFacts.getAssociatedActivities().get(0);
-                        double pickupActArrTime = iFacts.getRelatedActivityContext().getArrivalTime();
-                        double pickupActEndTime = startOf(pickupAct, pickupActArrTime) + activityCosts.getActivityDuration(pickupAct, pickupActArrTime, iFacts.getNewDriver(), iFacts.getNewVehicle());
-                        double nextAfterPickupArr = pickupActEndTime + transportTime.getTransportTime(pickupAct.getLocation(), nextAfterPickup.getLocation(), pickupActArrTime, iFacts.getNewDriver(), iFacts.getNewVehicle());
-                        additionalTimeOfNewJob += startOf(nextAfterPickup, nextAfterPickupArr) - startOf(nextAfterPickup, nextAfterPickup.getArrTime());
+                    if (openJobsAtNextOfPickup != null) {
+                        if (openJobsAtNextOfPickup.containsKey(openJob)) {
+                            TourActivity pickupAct = iFacts.getAssociatedActivities().get(0);
+                            double pickupActArrTime = iFacts.getRelatedActivityContext().getArrivalTime();
+                            double pickupActEndTime = startOf(pickupAct, pickupActArrTime) + activityCosts.getActivityDuration(pickupAct, pickupActArrTime, iFacts.getNewDriver(), iFacts.getNewVehicle());
+                            double nextAfterPickupArr = pickupActEndTime + transportTime.getTransportTime(pickupAct.getLocation(), nextAfterPickup.getLocation(), pickupActArrTime, iFacts.getNewDriver(), iFacts.getNewVehicle());
+                            additionalTimeOfNewJob += startOf(nextAfterPickup, nextAfterPickupArr) - startOf(nextAfterPickup, nextAfterPickup.getArrTime());
+                        }
+                    }
+                    else {
+                        return ConstraintsStatus.NOT_FULFILLED;
                     }
                 }
                 if (additionalTimeOfNewJob > slack) {

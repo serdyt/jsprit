@@ -58,6 +58,8 @@ public class DRT_test {
         String tdmFile = null;
         String outFile = null;
         String simLog = null;
+        String iterations = "2000";
+        String threads = "4";
 
         for (int i = 0; i < args.length; i += 2) {
             if (args[i].equals("-printSolution")) {
@@ -77,6 +79,12 @@ public class DRT_test {
             }
             else if (args[i].equals("-picFolder")){
                 picFolder = args[i+1];
+            }
+            else if (args[i].equals("-iterations")){
+                iterations = args[i+1];
+            }
+            else if (args[i].equals("-threads")){
+                threads = args[i+1];
             }
         }
 
@@ -130,20 +138,22 @@ public class DRT_test {
         constraintManager.addConstraint(new MaxTimeInVehicleConstraint(vrp.getTransportCosts(), vrp.getActivityCosts(), id, stateManager, vrp, openJobsId), ConstraintManager.Priority.CRITICAL);
 
         Jsprit.Builder algorithmBuilder = Jsprit.Builder.newInstance(vrp);
-        algorithmBuilder.setProperty(Jsprit.Parameter.MAX_TRANSPORT_COSTS, Double.toString(1.0E18));
-        algorithmBuilder.setProperty(Jsprit.Parameter.THREADS.toString(), "4");
-        algorithmBuilder.setProperty(Jsprit.Parameter.ITERATIONS.toString(), "2000");
+        algorithmBuilder.setProperty(Jsprit.Parameter.MAX_TRANSPORT_COSTS, Double.toString(1.0E12));
+        algorithmBuilder.setProperty(Jsprit.Parameter.THREADS.toString(), threads);
+        algorithmBuilder.setProperty(Jsprit.Parameter.ITERATIONS.toString(), iterations);
         algorithmBuilder.setProperty(Jsprit.Parameter.VEHICLE_SWITCH.toString(), "true");
-        algorithmBuilder.setProperty(Jsprit.Parameter.BREAK_SCHEDULING.toString(), String.valueOf(false));
+        algorithmBuilder.setProperty(Jsprit.Parameter.BREAK_SCHEDULING.toString(), String.valueOf(true));
+//        algorithmBuilder.setProperty(Jsprit.Parameter.CONSTRUCTION, Jsprit.Construction.BEST_INSERTION.toString());
         algorithmBuilder.setStateAndConstraintManager(stateManager,constraintManager);
-//        algorithmBuilder.setProperty(Jsprit.Parameter.FAST_REGRET.toString(), "true");
+        //algorithmBuilder.setProperty(Jsprit.Parameter.FAST_REGRET.toString(), "true");
         Random rand = new Random();
         rand.setSeed(42);
         algorithmBuilder.setRandom(rand);
         VehicleRoutingAlgorithm algorithm = algorithmBuilder.buildAlgorithm();
-        VariationCoefficientTermination prematureTermination = new VariationCoefficientTermination(20, 0.01);
-        algorithm.setPrematureAlgorithmTermination(prematureTermination);
-        algorithm.addListener(prematureTermination);
+        VariationCoefficientTermination prematureTermination = new VariationCoefficientTermination(20, 0.1);
+        //algorithm.setPrematureAlgorithmTermination(prematureTermination);
+        //algorithm.addListener(prematureTermination);
+
 //        algorithm.setPrematureAlgorithmTermination(new IterationWithoutImprovementTermination(20));
 //        algorithm.addTerminationCriterion(new IterationWithoutImprovementTermination(20));
 

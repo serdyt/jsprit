@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <!--
   ~ Licensed to GraphHopper GmbH under one or more contributor
   ~ license agreements. See the NOTICE file distributed with this work for
@@ -31,9 +31,9 @@
     </Appenders>
     <Loggers>
         <Logger name="jsprit" level="debug" additivity="true">
-            <appender-ref ref="File" level="debug" />
+            <appender-ref ref="File" level="DEBUG" />
         </Logger>
-        <Root level="warn" additivity="false">
+        <Root level="info" additivity="false">
             <appender-ref ref="console" />
         </Root>
     </Loggers>
