@@ -60,6 +60,8 @@ public class DRT_test {
         String simLog = null;
         String iterations = "2000";
         String threads = "4";
+        String construction = "regret_insertion";
+        String fast_regret = "false";
 
         for (int i = 0; i < args.length; i += 2) {
             if (args[i].equals("-printSolution")) {
@@ -85,6 +87,12 @@ public class DRT_test {
             }
             else if (args[i].equals("-threads")){
                 threads = args[i+1];
+            }
+            else if (args[i].equals("-construction")){
+                construction = args[i+1];
+            }
+            else if (args[i].equals("-fast_regret")){
+                fast_regret = args[i+1];
             }
         }
 
@@ -113,10 +121,11 @@ public class DRT_test {
         new VrpXMLReader(vrpBuilder).read(vrpFile);
 
 //      Calculate the size of time-distance matrix from an input vrp file.
-        Set<Integer> ints = vrpBuilder.getLocationMap().keySet().stream()
-            .map(s -> Integer.parseInt(s))
-            .collect(Collectors.toSet());
-        int tdm_size = java.util.Collections.max(ints)+1;
+//        Set<Integer> ints = vrpBuilder.getLocationMap().keySet().stream()
+//            .map(s -> Integer.parseInt(s))
+//            .collect(Collectors.toSet());
+//        int tdm_size = java.util.Collections.max(ints)+1;
+        int tdm_size = readTdmSize(tdmFile)+1;
 
 //      Read time-distance matrix from an input csv.
 //        Input csv file location is either in arguments or in data/time-distance-matrix.csv
@@ -143,9 +152,9 @@ public class DRT_test {
         algorithmBuilder.setProperty(Jsprit.Parameter.ITERATIONS.toString(), iterations);
         algorithmBuilder.setProperty(Jsprit.Parameter.VEHICLE_SWITCH.toString(), "true");
         algorithmBuilder.setProperty(Jsprit.Parameter.BREAK_SCHEDULING.toString(), String.valueOf(true));
-//        algorithmBuilder.setProperty(Jsprit.Parameter.CONSTRUCTION, Jsprit.Construction.BEST_INSERTION.toString());
+        algorithmBuilder.setProperty(Jsprit.Parameter.CONSTRUCTION, construction);
         algorithmBuilder.setStateAndConstraintManager(stateManager,constraintManager);
-        //algorithmBuilder.setProperty(Jsprit.Parameter.FAST_REGRET.toString(), "true");
+        algorithmBuilder.setProperty(Jsprit.Parameter.FAST_REGRET.toString(), fast_regret);
         Random rand = new Random();
         rand.setSeed(42);
         algorithmBuilder.setRandom(rand);
@@ -183,6 +192,18 @@ public class DRT_test {
 //            .labelWith(GraphStreamViewer.Label.ID).setRenderShipments(true).setRenderDelay(200)
 //            .setGraphStreamFrameScalingFactor(3)
 //            .display();
+    }
+
+    private static int readTdmSize(String tdmFile) throws IOException {
+        BufferedReader br = new BufferedReader(new FileReader(tdmFile));
+        String lastLine = "";
+        String sCurrentLine;
+
+        while ((sCurrentLine = br.readLine()) != null){
+            lastLine = sCurrentLine;
+        }
+        String[] lineTokens = lastLine.split(",");
+        return Integer.parseInt(lineTokens[0]);
     }
 
     /**
